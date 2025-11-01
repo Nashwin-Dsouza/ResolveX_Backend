@@ -80,15 +80,37 @@ router.get("/", protectRoute, async (req, res) => {
 // GET COMPLAINTS BY THE LOGGED-IN USER
 // (This route is now updated)
 // -----------------------------------------------------------------
+// GET COMPLAINTS BY THE LOGGED-IN USER (WITH PAGINATION)
 router.get("/user", protectRoute, async (req, res) => {
   try {
-    // Find complaints by user ID
-    const complaints = await Complaint.find({ user: req.user._id }).sort({
-      createdAt: -1,
+    // 1. Get page and limit from query
+    const page = req.query.page || 1;
+    const limit = req.query.limit || 5; 
+    const skip = (page - 1) * limit;
+
+    // 2. Create the filter
+    const userFilter = { user: req.user._id };
+
+    // 3. Find with pagination
+    const complaints = await Complaint.find(userFilter)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate("user", "username profileImage");
+
+    // 4. Count the total
+    const totalComplaints = await Complaint.countDocuments(userFilter);
+
+    // 5. Send the full response object
+    res.send({
+      complaints,
+      currentPage: page,
+      totalComplaints,
+      totalPages: Math.ceil(totalComplaints / limit),
     });
-    res.json(complaints); // Renamed 'books' to 'complaints'
+    
   } catch (error) {
-    console.error("Get user complaints error:", error.message); // Updated log
+    console.error("Get user complaints error:", error.message);
     res.status(500).json({ message: "Server error" });
   }
 });
