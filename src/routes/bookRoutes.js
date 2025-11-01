@@ -5,32 +5,45 @@ import protectRoute from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 
+// This route should be at the endpoint your app is calling, e.g., /api/v1/complaints
 router.post("/", protectRoute, async (req, res) => {
   try {
-    const { title, caption, rating, image } = req.body;
+    // 1. Destructure the NEW fields from your React Native app
+    const { description, cause, impact, location, proofImage } = req.body;
 
-    if (!image || !title || !caption || !rating) {
-      return res.status(400).json({ message: "Please provide all fields" });
+    // 2. Validate the NEW required fields
+    if (!description || !cause || !impact) {
+      return res.status(400).json({ 
+        message: "Please provide description, cause, and impact fields" 
+      });
     }
 
-    // upload the image to cloudinary
-    const uploadResponse = await cloudinary.uploader.upload(image);
-    const imageUrl = uploadResponse.secure_url;
+    let imageUrl = null; // Default to null, since the image is optional
 
-    // save to the database
-    const newBook = new Book({
-      title,
-      caption,
-      rating,
-      image: imageUrl,
-      user: req.user._id,
+    // 3. Check if an image was provided before uploading
+    if (proofImage) {
+      // This logic is the same! It uploads the Base64 string
+      const uploadResponse = await cloudinary.uploader.upload(proofImage);
+      imageUrl = uploadResponse.secure_url;
+    }
+
+    // 4. Save to the NEW Complaint model
+    // (Make sure you import your 'Complaint' model at the top)
+    const newComplaint = new Complaint({
+      description,
+      cause,
+      impact,
+      location,
+      proofImage: imageUrl, // Save the URL from Cloudinary (or null)
+      user: req.user._id,   // This line is still correct!
     });
 
-    await newBook.save();
+    await newComplaint.save();
 
-    res.status(201).json(newBook);
+    res.status(201).json(newComplaint);
   } catch (error) {
-    console.log("Error creating book", error);
+    // 5. Update the error message
+    console.log("Error creating complaint", error);
     res.status(500).json({ message: error.message });
   }
 });
