@@ -130,7 +130,7 @@ router.post("/", protectRoute, async (req, res) => {
     // 2. --- DETERMINE THE "PROPER DEPARTMENT" ---
     // This is business logic. For now, let's use a placeholder.
     // You could make this more complex later (e.g., based on 'cause')
-    const departmentEmail = "public.works.dept@example.com";
+    const departmentEmail = "nashwindsouza2801@gmail.com";
     const complaintId = new mongoose.Types.ObjectId(); // Generate ID now
 
     // 3. --- GENERATE THE "EMAIL BODY" ---
