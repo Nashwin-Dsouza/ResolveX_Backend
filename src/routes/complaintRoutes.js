@@ -4,6 +4,7 @@ import cloudinary from "../lib/cloudinary.js";
 import protectRoute from "../middleware/auth.middleware.js";
 import Complaint from "../models/complaintModel.js";
 import { sendComplaintEmail } from "../lib/sendEmail.js";
+import mongoose from "mongoose";
 
 const router = express.Router();
 
