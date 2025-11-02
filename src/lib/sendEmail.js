@@ -11,18 +11,14 @@ const transporter = nodemailer.createTransport({
 });
 
 export const sendComplaintEmail = async (to, subject, htmlBody) => {
-  try {
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: to,
-      subject: subject,
-      html: htmlBody, // We use HTML to format it nicely
-    };
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: to,
+    subject: subject,
+    html: htmlBody,
+  };
 
-    await transporter.sendMail(mailOptions);
-    console.log("Email sent successfully");
-  } catch (error) {
-    console.error("Error sending email:", error);
-    // We don't throw an error, just log it. The complaint was still saved.
-  }
+  // Let this throw an error if it fails
+  await transporter.sendMail(mailOptions);
+  console.log("Email sent successfully");
 };
