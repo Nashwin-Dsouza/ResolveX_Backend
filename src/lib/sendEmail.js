@@ -7,7 +7,7 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 export const sendComplaintEmail = async (to, subject, htmlBody) => {
   const msg = {
     to: to, // The department's email
-    from: 'your-verified-email@gmail.com', // MUST be the email you verified on SendGrid
+    from: 'onlinecomplainmanager@gmail.com', // MUST be the email you verified on SendGrid
     subject: subject,
     html: htmlBody,
   };
