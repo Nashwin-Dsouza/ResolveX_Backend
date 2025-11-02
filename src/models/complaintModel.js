@@ -6,7 +6,6 @@ const { Schema } = mongoose;
 const complaintSchema = new Schema(
   {
     // This links the complaint to the user who created it
-    // 'ref: "User"' is the magic part that connects this to your User model
     user: {
       type: Schema.Types.ObjectId,
       ref: "User",
@@ -31,15 +30,21 @@ const complaintSchema = new Schema(
     location: {
       type: String,
     },
-    // This will be the URL from Cloudinary (it's optional)
+    // This will be the URL from Cloudinary (now required)
     proofImage: {
       type: String,
+      required: true, // We made this required
     },
-    // I added this field for you. It's very useful for tracking.
+    // This is for tracking
     status: {
       type: String,
       enum: ["Pending", "In Progress", "Resolved"], // Only allows these values
       default: "Pending", // New complaints will automatically be 'Pending'
+    },
+    // --- THIS IS YOUR NEW FIELD ---
+    emailBody: {
+      type: String,
+      required: true,
     },
   },
   {
