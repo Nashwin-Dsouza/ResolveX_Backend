@@ -15,27 +15,60 @@ const router = express.Router();
 router.post("/", protectRoute, async (req, res) => {
   try {
     const { description, cause, impact, location, proofImage } = req.body;
+    const user = req.user; // Get the full user from protectRoute
 
+    // 1. Validation (This is your code from Part 1)
     if (!description || !cause || !impact || !proofImage) {
       return res.status(400).json({
         message: "All fields, including a proof image, are required.",
       });
     }
-
-    // Now we can upload it, knowing it exists
     const uploadResponse = await cloudinary.uploader.upload(proofImage);
     const imageUrl = uploadResponse.secure_url;
 
+    // 2. --- DETERMINE THE "PROPER DEPARTMENT" ---
+    // This is business logic. For now, let's use a placeholder.
+    // You could make this more complex later (e.g., based on 'cause')
+    const departmentEmail = "nashwindsouza2801@gmail.com";
+    const complaintId = new mongoose.Types.ObjectId(); // Generate ID now
+
+    // 3. --- GENERATE THE "EMAIL BODY" ---
+    // This is the formatted text we will save and send
+    const emailBody = `
+      <p><strong>New Complaint Filed:</strong> #${complaintId.toString().slice(-6)}</p>
+      <p><strong>Filed By:</strong> ${user.username} (${user.email})</p>
+      <p><strong>Date:</strong> ${new Date().toLocaleString()}</p>
+      <hr>
+      <h3>Complaint Details:</h3>
+      <p><strong>Description:</strong> ${description}</p>
+      <p><strong>Cause:</strong> ${cause}</p>
+      <p><strong>Impact:</strong> ${impact}</p>
+      <p><strong>Location:</strong> ${location || "Not provided"}</p>
+      <hr>
+      <p><strong>Proof of Issue:</strong></p>
+      <img src="${imageUrl}" alt="Proof Image" style="max-width: 500px;" />
+    `;
+
+    // 4. --- SAVE THE COMPLAINT (with the new field) ---
     const newComplaint = new Complaint({
+      _id: complaintId, // Use the ID we generated
       description,
       cause,
       impact,
       location,
       proofImage: imageUrl,
-      user: req.user._id,
+      user: user._id,
+      emailBody: emailBody, // <-- SAVE THE EMAIL BODY HERE
     });
-
     await newComplaint.save();
+
+    // 5. --- SEND THE EMAIL (After saving) ---
+    await sendComplaintEmail(
+      departmentEmail,
+      `New Complaint: #${complaintId.toString().slice(-6)}`,
+      emailBody
+    );
+
     res.status(201).json(newComplaint);
   } catch (error) {
     console.log("Error creating complaint", error);
@@ -114,69 +147,7 @@ router.get("/user", protectRoute, async (req, res) => {
   }
 });
 
-router.post("/", protectRoute, async (req, res) => {
-  try {
-    const { description, cause, impact, location, proofImage } = req.body;
-    const user = req.user; // Get the full user from protectRoute
 
-    // 1. Validation (This is your code from Part 1)
-    if (!description || !cause || !impact || !proofImage) {
-      return res.status(400).json({
-        message: "All fields, including a proof image, are required.",
-      });
-    }
-    const uploadResponse = await cloudinary.uploader.upload(proofImage);
-    const imageUrl = uploadResponse.secure_url;
-
-    // 2. --- DETERMINE THE "PROPER DEPARTMENT" ---
-    // This is business logic. For now, let's use a placeholder.
-    // You could make this more complex later (e.g., based on 'cause')
-    const departmentEmail = "nashwindsouza2801@gmail.com";
-    const complaintId = new mongoose.Types.ObjectId(); // Generate ID now
-
-    // 3. --- GENERATE THE "EMAIL BODY" ---
-    // This is the formatted text we will save and send
-    const emailBody = `
-      <p><strong>New Complaint Filed:</strong> #${complaintId.toString().slice(-6)}</p>
-      <p><strong>Filed By:</strong> ${user.username} (${user.email})</p>
-      <p><strong>Date:</strong> ${new Date().toLocaleString()}</p>
-      <hr>
-      <h3>Complaint Details:</h3>
-      <p><strong>Description:</strong> ${description}</p>
-      <p><strong>Cause:</strong> ${cause}</p>
-      <p><strong>Impact:</strong> ${impact}</p>
-      <p><strong>Location:</strong> ${location || "Not provided"}</p>
-      <hr>
-      <p><strong>Proof of Issue:</strong></p>
-      <img src="${imageUrl}" alt="Proof Image" style="max-width: 500px;" />
-    `;
-
-    // 4. --- SAVE THE COMPLAINT (with the new field) ---
-    const newComplaint = new Complaint({
-      _id: complaintId, // Use the ID we generated
-      description,
-      cause,
-      impact,
-      location,
-      proofImage: imageUrl,
-      user: user._id,
-      emailBody: emailBody, // <-- SAVE THE EMAIL BODY HERE
-    });
-    await newComplaint.save();
-
-    // 5. --- SEND THE EMAIL (After saving) ---
-    await sendComplaintEmail(
-      departmentEmail,
-      `New Complaint: #${complaintId.toString().slice(-6)}`,
-      emailBody
-    );
-
-    res.status(201).json(newComplaint);
-  } catch (error) {
-    console.log("Error creating complaint", error);
-    res.status(500).json({ message: error.message });
-  }
-});
 
 // -----------------------------------------------------------------
 // DELETE A COMPLAINT
