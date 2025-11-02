@@ -147,7 +147,30 @@ router.get("/user", protectRoute, async (req, res) => {
   }
 });
 
+// --- Add this new route for testing your email ---
 
+router.get("/test-email", protectRoute, async (req, res) => {
+  try {
+    // Get the user's email from their token
+    const userEmail = req.user.email; 
+    
+    console.log(`Sending test email to: ${userEmail}`);
+
+    await sendComplaintEmail(
+      userEmail, // Send it to the logged-in user
+      "ResolveX Email Test",
+      "<h1>Hi!</h1><p>This is a test to confirm your email credentials are working.</p>"
+    );
+
+    // This response will only send if the email works
+    res.status(200).json({ message: "Test email sent successfully!" });
+
+  } catch (error) {
+    // This will run if sendComplaintEmail throws an error
+    console.error("Test email failed:", error);
+    res.status(500).json({ message: "Test email failed", error: error.message });
+  }
+});
 
 // -----------------------------------------------------------------
 // DELETE A COMPLAINT
