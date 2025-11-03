@@ -15,8 +15,13 @@ const NLP_SERVICE_URL = process.env.NLP_SERVICE_URL;
 // -----------------------------------------------------------------
 router.post("/", protectRoute, async (req, res) => {
   try {
+
+    console.log("Attempting to call NLP service at:", NLP_SERVICE_URL);
+    
     const { description, cause, impact, location, proofImage } = req.body;
     const user = req.user;
+
+    
 
     // 1. Validation (Image is required)
     if (!description || !cause || !impact || !proofImage) {
