@@ -1,29 +1,36 @@
 import cron from "cron";
-import https from "https";
 
-const job = new cron.CronJob("*/14 * * * *", function () {
-  https
-    .get(process.env.API_URL, (res) => {
-      if (res.statusCode === 200) console.log("GET request sent successfully");
-      else console.log("GET request failed", res.statusCode);
-    })
-    .on("error", (e) => console.error("Error while sending request", e));
-});
+// Your two service URLs
+const NODE_APP_URL = process.env.API_URL;
+const PYTHON_APP_URL = "https://resolvex-nlp-service.onrender.com/"; // Your new Python health check URL
+
+const pingServices = async () => {
+  console.log("Pinging services to keep them awake...");
+  
+  try {
+    const resNode = await fetch(NODE_APP_URL);
+    if (resNode.ok) {
+      console.log("Pinged Node.js service successfully");
+    } else {
+      console.log("Node.js service ping failed:", resNode.status);
+    }
+  } catch (error) {
+    console.error("Error pinging Node.js:", error.message);
+  }
+
+  try {
+    const resPython = await fetch(PYTHON_APP_URL);
+    if (resPython.ok) {
+      console.log("Pinged Python NLP service successfully");
+    } else {
+      console.log("Python service ping failed:", resPython.status);
+    }
+  } catch (error) {
+    console.error("Error pinging Python:", error.message);
+  }
+};
+
+// This creates the "every 14 minutes" schedule
+const job = new cron.CronJob("*/14 * * * *", pingServices);
 
 export default job;
-
-// CRON JOB EXPLANATION:
-// Cron jobs are scheduled tasks that run periodically at fixed intervals
-// we want to send 1 GET request for every 14 minutes
-
-// How to define a "Schedule"?
-// You define a schedule using a cron expression, which consists of 5 fields representing:
-
-//! MINUTE, HOUR, DAY OF THE MONTH, MONTH, DAY OF THE WEEK
-
-//? EXAMPLES && EXPLANATION:
-//* 14 * * * * - Every 14 minutes
-//* 0 0 * * 0 - At midnight on every Sunday
-//* 30 3 15 * * - At 3:30 AM, on the 15th of every month
-//* 0 0 1 1 * - At midnight, on January 1st
-//* 0 * * * * - Every hour

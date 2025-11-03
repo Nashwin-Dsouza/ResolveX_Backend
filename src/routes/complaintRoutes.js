@@ -5,9 +5,10 @@ import protectRoute from "../middleware/auth.middleware.js";
 import Complaint from "../models/complaintModel.js";
 import { sendComplaintEmail } from "../lib/sendEmail.js";
 import mongoose from "mongoose";
+import axios from "axios";
 
 const router = express.Router();
-
+const NLP_SERVICE_URL = process.env.NLP_SERVICE_URL;
 // -----------------------------------------------------------------
 // CREATE A NEW COMPLAINT
 // (This route was already correct, no changes needed)
@@ -15,9 +16,9 @@ const router = express.Router();
 router.post("/", protectRoute, async (req, res) => {
   try {
     const { description, cause, impact, location, proofImage } = req.body;
-    const user = req.user; // Get the full user from protectRoute
+    const user = req.user;
 
-    // 1. Validation (This is your code from Part 1)
+    // 1. Validation (Image is required)
     if (!description || !cause || !impact || !proofImage) {
       return res.status(400).json({
         message: "All fields, including a proof image, are required.",
@@ -26,20 +27,36 @@ router.post("/", protectRoute, async (req, res) => {
     const uploadResponse = await cloudinary.uploader.upload(proofImage);
     const imageUrl = uploadResponse.secure_url;
 
-    // 2. --- DETERMINE THE "PROPER DEPARTMENT" ---
-    // This is business logic. For now, let's use a placeholder.
-    // You could make this more complex later (e.g., based on 'cause')
-    const departmentEmail = "nashwindsouza2801@gmail.com";
-    const complaintId = new mongoose.Types.ObjectId(); // Generate ID now
+    // 2. --- CALL NLP MICROSERVICE ---
+    let department_email, department_name, classified_intent;
+    
+    try {
+      const nlpResponse = await axios.post(NLP_SERVICE_URL, {
+        description: description, // Send the complaint for classification
+      });
+      
+      // Get the new data back from the Python service
+      department_email = nlpResponse.data.department_email;
+      department_name = nlpResponse.data.department_name;
+      classified_intent = nlpResponse.data.intent;
 
-    // 3. --- GENERATE THE "EMAIL BODY" ---
-    // This is the formatted text we will save and send
+    } catch (nlpError) {
+      console.error("NLP Service failed:", nlpError.message);
+      // Fallback to a general department
+      department_email = "grievance@gov.in";
+      department_name = "General Administration & Grievance";
+      classified_intent = "UNCLASSIFIED";
+    }
+
+    // 3. --- GENERATE EMAIL BODY (Now with Department Name) ---
+    const complaintId = new mongoose.Types.ObjectId();
     const emailBody = `
       <p><strong>New Complaint Filed:</strong> #${complaintId.toString().slice(-6)}</p>
       <p><strong>Filed By:</strong> ${user.username} (${user.email})</p>
-      <p><strong>Date:</strong> ${new Date().toLocaleString()}</p>
+      <p><strong>Assigned Department:</strong> ${department_name}</p>
+      <p><strong>Classified As:</strong> ${classified_intent}</p>
       <hr>
-      <h3>Complaint Details:</h3>
+      <h3>Full User Report:</h3>
       <p><strong>Description:</strong> ${description}</p>
       <p><strong>Cause:</strong> ${cause}</p>
       <p><strong>Impact:</strong> ${impact}</p>
@@ -49,27 +66,35 @@ router.post("/", protectRoute, async (req, res) => {
       <img src="${imageUrl}" alt="Proof Image" style="max-width: 500px;" />
     `;
 
-    // 4. --- SAVE THE COMPLAINT (with the new field) ---
+    // 4. --- SAVE TO DATABASE (with new fields) ---
     const newComplaint = new Complaint({
-      _id: complaintId, // Use the ID we generated
+      _id: complaintId,
+      user: user._id,
       description,
       cause,
       impact,
       location,
       proofImage: imageUrl,
-      user: user._id,
-      emailBody: emailBody, // <-- SAVE THE EMAIL BODY HERE
+      emailBody: emailBody,
+      classified_intent: classified_intent,   // <-- Save new data
+      department_email: department_email,     // <-- Save new data
+      department_name: department_name        // <-- Save new data
     });
     await newComplaint.save();
 
-    // 5. --- SEND THE EMAIL (After saving) ---
-    await sendComplaintEmail(
-      departmentEmail,
-      `New Complaint: #${complaintId.toString().slice(-6)}`,
-      emailBody
-    );
+    // 5. --- SEND RESPONSE & EMAIL ---
+    res.status(201).json(newComplaint); // Send response immediately
 
-    res.status(201).json(newComplaint);
+    try {
+      sendComplaintEmail(
+        department_email, // Use the email from the NLP service
+        `New Complaint: #${complaintId.toString().slice(-6)}`,
+        emailBody
+      );
+    } catch (emailError) {
+      console.error("CRITICAL: Email failed to send:", emailError);
+    }
+
   } catch (error) {
     console.log("Error creating complaint", error);
     res.status(500).json({ message: error.message });

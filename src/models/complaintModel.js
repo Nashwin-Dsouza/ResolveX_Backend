@@ -46,7 +46,20 @@ const complaintSchema = new Schema(
       type: String,
       required: true,
     },
+    emailBody: {
+      type: String,
+      required: true,
+    },
+    classified_intent: {
+      type: String, // e.g., 'BUS_LATE_OR_NO_SHOW'
+    },
+    department_assigned: {
+      type: String, // e.g., 'bus.services@transport.gov.in'
+    }
+  
+  
   },
+ 
   {
     // This automatically adds 'createdAt' and 'updatedAt' fields
     timestamps: true,
