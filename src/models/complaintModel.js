@@ -5,61 +5,56 @@ const { Schema } = mongoose;
 // This is the blueprint for your complaint data
 const complaintSchema = new Schema(
   {
-    // This links the complaint to the user who created it
+    // --- Core User Info ---
     user: {
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
-    // This comes from the 'complaint' state in your app
+    
+    // --- User Input Fields ---
     description: {
       type: String,
       required: true,
     },
-    // This comes from the 'cause' state
     cause: {
       type: String,
       required: true,
     },
-    // This comes from the 'impact' state
     impact: {
       type: String,
       required: true,
     },
-    // This comes from the 'location' state (it's optional)
     location: {
       type: String,
     },
-    // This will be the URL from Cloudinary (now required)
     proofImage: {
       type: String,
-      required: true, // We made this required
+      required: true,
     },
-    // This is for tracking
+
+    // --- Internal App Fields ---
     status: {
       type: String,
-      enum: ["Pending", "In Progress", "Resolved"], // Only allows these values
-      default: "Pending", // New complaints will automatically be 'Pending'
-    },
-    // --- THIS IS YOUR NEW FIELD ---
-    emailBody: {
-      type: String,
-      required: true,
+      enum: ["Pending", "In Progress", "Resolved"],
+      default: "Pending",
     },
     emailBody: {
       type: String,
       required: true,
     },
+    
+    // --- NLP Classification Fields ---
     classified_intent: {
-      type: String, // e.g., 'BUS_LATE_OR_NO_SHOW'
+      type: String, // e.g., 'BUS_ISSUE'
     },
-    department_assigned: {
+    department_email: {
       type: String, // e.g., 'bus.services@transport.gov.in'
+    },
+    department_name: {
+      type: String, // e.g., 'Public Bus Service Department'
     }
-  
-  
   },
- 
   {
     // This automatically adds 'createdAt' and 'updatedAt' fields
     timestamps: true,
