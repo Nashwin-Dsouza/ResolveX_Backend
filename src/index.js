@@ -5,6 +5,7 @@ import job from "./lib/cron.js";
 
 import authRoutes from "./routes/authRoutes.js";
 import complaintRoutes from "./routes/complaintRoutes.js";
+import userRoutes from './routes/userRoutes.js';
 
 import { connectDB } from "./lib/db.js";
 
@@ -17,6 +18,7 @@ app.use(cors());
 
 app.use("/api/auth", authRoutes);
 app.use("/api/v1/complaints", complaintRoutes);
+app.use("/api/v1/users", userRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
