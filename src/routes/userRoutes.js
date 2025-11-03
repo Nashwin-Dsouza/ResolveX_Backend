@@ -1,6 +1,6 @@
 // routes/userRoutes.js
 import express from 'express';
-import { protectRoute } from '../middleware/protectRoute.js';
+import { protectRoute } from '../middleware/auth.middleware.js';
 import Complaint from '../models/complaintModel.js';
 import User from '../models/userModel.js'; // Make sure to import your User model
 
