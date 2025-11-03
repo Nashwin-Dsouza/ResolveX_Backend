@@ -1,8 +1,8 @@
 import cron from "cron";
 
-// Your two service URLs
-const NODE_APP_URL = process.env.API_URL;
-const PYTHON_APP_URL = "https://resolvex-nlp-service.onrender.com/"; // Your new Python health check URL
+// 1. --- CORRECTIONS ARE HERE ---
+const NODE_APP_URL = process.env.API_URL + "/health"; // Add /health
+const PYTHON_APP_URL = "https://resolvex-nlp-part.onrender.com/"; // Use the correct name
 
 const pingServices = async () => {
   console.log("Pinging services to keep them awake...");

@@ -61,6 +61,8 @@ const complaintSchema = new Schema(
   }
 );
 
+complaintSchema.index({ createdAt: -1 });
+
 // This creates the model that your routes will use
 const Complaint = mongoose.model("Complaint", complaintSchema);
 
