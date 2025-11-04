@@ -202,21 +202,23 @@ router.get("/test-email", protectRoute, async (req, res) => {
   }
 });
 
+// -----------------------------------------------------------------
+// GET A SINGLE COMPLAINT (Publicly Viewable)
+// -----------------------------------------------------------------
 router.get("/:id", protectRoute, async (req, res) => {
   try {
     const complaint = await Complaint.findById(req.params.id)
-      .populate("user", "username email profileImage"); // Get user details
+      .populate("user", "username email profileImage"); // Get all user details
 
     if (!complaint) {
       return res.status(404).json({ message: "Complaint not found" });
     }
 
-    // Optional: Check if the user is authorized to see it
-    if (complaint.user._id.toString() !== req.user._id.toString()) {
-      return res.status(401).json({ message: "Not authorized" });
-    }
+    // --- AUTHORIZATION CHECK IS NOW REMOVED ---
+    // Anyone who is logged in can view the details.
 
     res.status(200).json(complaint);
+    
   } catch (error) {
     console.error("Get single complaint error:", error.message);
     res.status(500).json({ message: "Server error" });
