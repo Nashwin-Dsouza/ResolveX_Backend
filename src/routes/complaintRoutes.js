@@ -68,7 +68,7 @@ router.post("/", protectRoute, async (req, res) => {
       <p><strong>Location:</strong> ${location || "Not provided"}</p>
       <hr>
       <p><strong>Proof of Issue:</strong></p>
-      <img src="${imageUrl}" alt="Proof Image" style="max-width: 500px;" />
+      <img src="${imageUrl}" alt="Proof Image" style="max-width: 100%; height: auto;" />
     `;
 
     // 4. --- SAVE TO DATABASE (with new fields) ---
