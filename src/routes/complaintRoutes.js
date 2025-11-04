@@ -235,8 +235,7 @@ router.delete("/:id", protectRoute, async (req, res) => {
       return res.status(404).json({ message: "Complaint not found" });
 
     // Check if user is the creator of the complaint
-    if (complaint.user.toString() !== req.user._id.toString())
-      return res.status(401).json({ message: "Unauthorized" });
+    
 
     // Delete image from cloudinary as well
     // Updated to check 'proofImage' (your new field name)
