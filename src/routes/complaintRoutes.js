@@ -11,7 +11,6 @@ const router = express.Router();
 const NLP_SERVICE_URL = process.env.NLP_SERVICE_URL;
 // -----------------------------------------------------------------
 // CREATE A NEW COMPLAINT
-// (This route was already correct, no changes needed)
 // -----------------------------------------------------------------
 router.post("/", protectRoute, async (req, res) => {
   try {
@@ -50,10 +49,10 @@ router.post("/", protectRoute, async (req, res) => {
       // Fallback to a general department
       department_email = "grievance@gov.in";
       department_name = "General Administration & Grievance";
-      classified_intent = "UNCLASSIFIED";
+      classified_intent = "General Grievance";
     }
 
-    // 3. --- GENERATE EMAIL BODY (Now with Department Name) ---
+    // 3. --- GENERATE EMAIL BODY (Original version, includes user.email) ---
     const complaintId = new mongoose.Types.ObjectId();
     const emailBody = `
       <p><strong>New Complaint Filed:</strong> #${complaintId.toString().slice(-6)}</p>
@@ -73,7 +72,7 @@ router.post("/", protectRoute, async (req, res) => {
 
     // 4. --- SAVE TO DATABASE (with new fields) ---
     const newComplaint = new Complaint({
-      _id: complaintId,
+      _id: complaintId, // Use the ID we generated
       user: user._id,
       description,
       cause,
@@ -108,7 +107,6 @@ router.post("/", protectRoute, async (req, res) => {
 
 // -----------------------------------------------------------------
 // GET ALL COMPLAINTS (with pagination)
-// (This route is now updated to fetch Complaints)
 // -----------------------------------------------------------------
 router.get("/", protectRoute, async (req, res) => {
   try {
@@ -141,9 +139,7 @@ router.get("/", protectRoute, async (req, res) => {
 
 // -----------------------------------------------------------------
 // GET COMPLAINTS BY THE LOGGED-IN USER
-// (This route is now updated)
 // -----------------------------------------------------------------
-// GET COMPLAINTS BY THE LOGGED-IN USER (WITH PAGINATION)
 router.get("/user", protectRoute, async (req, res) => {
   try {
     // 1. Get page and limit from query
@@ -227,17 +223,17 @@ router.get("/:id", protectRoute, async (req, res) => {
 
 // -----------------------------------------------------------------
 // DELETE A COMPLAINT
-// (This route is now updated)
 // -----------------------------------------------------------------
 router.delete("/:id", protectRoute, async (req, res) => {
   try {
     // Find 'Complaint' by ID
     const complaint = await Complaint.findById(req.params.id);
     if (!complaint)
-      return res.status(404).json({ message: "Complaint not found" });
+      return res.status(400).json({ message: "Complaint not found" });
 
     // Check if user is the creator of the complaint
-    
+    if (complaint.user.toString() !== req.user._id.toString())
+      return res.status(401).json({ message: "Unauthorized" });
 
     // Delete image from cloudinary as well
     // Updated to check 'proofImage' (your new field name)
