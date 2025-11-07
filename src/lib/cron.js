@@ -32,6 +32,8 @@ const pingServices = async () => {
 
 const job = new cron.CronJob("*/14 * * * *", pingServices);
 
+pingServices();
+
 job.start(); // <-- 2. START THE JOB
 
 export default job;
