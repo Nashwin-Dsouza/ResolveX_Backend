@@ -19,6 +19,9 @@ app.use(cors());
 app.use("/api/auth", authRoutes);
 app.use("/api/v1/complaints", complaintRoutes);
 app.use("/api/v1/users", userRoutes);
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "healthy" });
+});
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
