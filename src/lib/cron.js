@@ -1,8 +1,8 @@
 import cron from "cron";
 
 // 1. --- CORRECTIONS ARE HERE ---
-const NODE_APP_URL = process.env.API_URL + "/health"; // Add /health
-const PYTHON_APP_URL = "https://resolvex-nlp-part.onrender.com/"; // Use the correct name
+const NODE_APP_URL = process.env.RENDER_EXTERNAL_URL + "/health"; // Use Render's variable
+const PYTHON_APP_URL = "https://resolvex-nlp-part.onrender.com/"; 
 
 const pingServices = async () => {
   console.log("Pinging services to keep them awake...");
@@ -30,7 +30,8 @@ const pingServices = async () => {
   }
 };
 
-// This creates the "every 14 minutes" schedule
 const job = new cron.CronJob("*/14 * * * *", pingServices);
+
+job.start(); // <-- 2. START THE JOB
 
 export default job;
